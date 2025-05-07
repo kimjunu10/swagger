@@ -12,7 +12,6 @@ app.use(express.json());
 
 const menuData = JSON.parse(fs.readFileSync("./data/restaurant_menu_data.json", "utf-8"));
 
-// ✅ Swagger 설정
 const swaggerOptions = {
     definition: {
         openapi: "3.0.0",
@@ -93,3 +92,7 @@ app.get("/restaurants/:name/menu", (req, res) => {
     res.json(filtered);
 });
 
+// ✅ 빠져있던 이 줄이 서버 실행을 담당
+app.listen(PORT, () => {
+    console.log(`✅ API Server running at http://localhost:${PORT}`);
+});
