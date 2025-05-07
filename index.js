@@ -10,10 +10,10 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// ✅ 새로 만든 JSON 데이터 불러오기
+// JSON 데이터 불러오기
 const restaurantData = JSON.parse(fs.readFileSync("./data/restaurants_with_menus.json", "utf-8"));
 
-// ✅ Swagger 설정
+// Swagger 설정
 const swaggerOptions = {
     definition: {
         openapi: "3.0.0",
@@ -34,35 +34,54 @@ app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
  * @swagger
  * /restaurants:
  *   get:
- *     summary: 전체 식당 리스트 (메뉴 포함)
+ *     summary: 전체 식당 리스트 또는 특정 ID 식당 반환
+ *     parameters:
+ *       - in: query
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         required: false
+ *         description: 식당 ID
  *     responses:
  *       200:
  *         description: 식당 및 메뉴 리스트 배열 반환
  */
 app.get("/restaurants", (req, res) => {
+    const { id } = req.query;
+
+    if (id) {
+        const restaurant = restaurantData.find(r => r.id === parseInt(id));
+        if (!restaurant) {
+            return res.status(404).json({ message: "해당 ID의 식당을 찾을 수 없습니다." });
+        }
+        return res.json([restaurant]); // FlutterFlow 호환을 위해 배열로 반환
+    }
+
     res.json(restaurantData);
 });
 
 /**
  * @swagger
- * /restaurants/{name}/menu:
+ * /restaurants/{id}/menu:
  *   get:
- *     summary: 특정 식당의 메뉴 가져오기
+ *     summary: 특정 ID의 식당 메뉴 가져오기
  *     parameters:
  *       - in: path
- *         name: name
+ *         name: id
  *         required: true
  *         schema:
- *           type: string
- *         description: 식당 이름
+ *           type: integer
+ *         description: 식당 ID
  *     responses:
  *       200:
  *         description: 해당 식당의 메뉴 리스트 반환
  */
-app.get("/restaurants/:name/menu", (req, res) => {
-    const { name } = req.params;
-    const restaurant = restaurantData.find(r => r.name === name);
-    if (!restaurant) return res.status(404).send("식당을 찾을 수 없습니다.");
+app.get("/restaurants/:id/menu", (req, res) => {
+    const { id } = req.params;
+    const restaurant = restaurantData.find(r => r.id === parseInt(id));
+    if (!restaurant) {
+        return res.status(404).json({ message: "해당 ID의 식당을 찾을 수 없습니다." });
+    }
     res.json(restaurant.menus);
 });
 
