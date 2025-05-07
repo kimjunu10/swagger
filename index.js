@@ -10,8 +10,10 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-const menuData = JSON.parse(fs.readFileSync("./data/restaurant_menu_data.json", "utf-8"));
+// ✅ 새로 만든 JSON 데이터 불러오기
+const restaurantData = JSON.parse(fs.readFileSync("./data/restaurants_with_menus.json", "utf-8"));
 
+// ✅ Swagger 설정
 const swaggerOptions = {
     definition: {
         openapi: "3.0.0",
@@ -32,25 +34,13 @@ app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
  * @swagger
  * /restaurants:
  *   get:
- *     summary: 전체 식당 리스트 가져오기
+ *     summary: 전체 식당 리스트 (메뉴 포함)
  *     responses:
  *       200:
- *         description: 식당 목록 배열 반환
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   id:
- *                     type: integer
- *                   name:
- *                     type: string
+ *         description: 식당 및 메뉴 리스트 배열 반환
  */
 app.get("/restaurants", (req, res) => {
-    const restaurants = [...new Set(menuData.map(item => item.restaurant_name))];
-    res.json(restaurants.map((name, index) => ({ id: index + 1, name })));
+    res.json(restaurantData);
 });
 
 /**
@@ -67,32 +57,15 @@ app.get("/restaurants", (req, res) => {
  *         description: 식당 이름
  *     responses:
  *       200:
- *         description: 메뉴 목록 배열 반환
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   restaurant_name:
- *                     type: string
- *                   menu_name:
- *                     type: string
- *                   price:
- *                     type: number
- *                   image:
- *                     type: string
- *                   rating:
- *                     type: number
+ *         description: 해당 식당의 메뉴 리스트 반환
  */
 app.get("/restaurants/:name/menu", (req, res) => {
     const { name } = req.params;
-    const filtered = menuData.filter(item => item.restaurant_name === name);
-    res.json(filtered);
+    const restaurant = restaurantData.find(r => r.name === name);
+    if (!restaurant) return res.status(404).send("식당을 찾을 수 없습니다.");
+    res.json(restaurant.menus);
 });
 
-// ✅ 빠져있던 이 줄이 서버 실행을 담당
 app.listen(PORT, () => {
     console.log(`✅ API Server running at http://localhost:${PORT}`);
 });
