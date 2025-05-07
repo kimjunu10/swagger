@@ -5,7 +5,7 @@ const swaggerUi = require("swagger-ui-express");
 const swaggerJsdoc = require("swagger-jsdoc");
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
@@ -21,7 +21,7 @@ const swaggerOptions = {
             version: "1.0.0",
             description: "API for accessing restaurant menus"
         },
-        servers: [{ url: `http://localhost:${PORT}` }]
+        servers: [{ url: "https://swagger-dr9i.onrender.com" }]
     },
     apis: ["./index.js"]
 };
@@ -93,6 +93,3 @@ app.get("/restaurants/:name/menu", (req, res) => {
     res.json(filtered);
 });
 
-app.listen(PORT, () => {
-    console.log(`✅ API Server running at http://localhost:${PORT}`);
-});
